@@ -1,0 +1,260 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>ROP Files</title>
+        <!-- 1. Add JQuery and Highcharts in the head of your page -->
+        <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+        <script src="http://code.highcharts.com/highcharts.js"></script>
+         
+        <!-- 2. You can add print and export feature by adding this line -->
+        <script src="http://code.highcharts.com/modules/exporting.js"></script>
+   
+        <!-- 3. Add the JavaScript with the Highchart options to initialize the chart -->
+        <script type="text/javascript">
+		var fileExt='.csv';
+        jQuery(document).ready(function() { 
+		
+		$.ajax({
+				url:'static/',
+				success: function(data){
+					$(data).find("a:contains("+ fileExt +")").each(function(){
+						var filename = this.href.replace(window.location.host,"").replace("http:///","");
+						$("body").append(filename);
+					});
+				}
+			});	
+ 		$("div").each(function(){
+			//console.log(this.id); 
+			var file = this.id;
+			var threshold; //Declare variable for threshold parameter
+            var options = {
+                chart: {
+                    renderTo: this.id,
+                    type: 'column'
+                },
+                title: {
+                    text: ''                 
+                },
+                subtitle: {
+                    text: ''
+                },
+                xAxis: {
+                    categories: [],
+			    title: {
+					text: ''
+				}
+                },
+                yAxis: {
+                    title: {
+                        text: ''
+                    }
+                },
+			credits: {
+						enabled: false
+					}, 
+					tooltip: {   
+					
+						 //shared: true,
+        useHTML: true,
+       headerFormat: '<small>{point.key}</small><table>',
+       pointFormat: '<tr><td style="color: {series.color}">{series.name}: </td>' +
+           '<td style="text-align: right"><b>{point.y}</b></td></tr>',
+        footerFormat: '</table>',
+        valueDecimals: 2,
+
+         //split: false,
+        //distance: 0,
+		//align:left 
+        //pointFormat: "Value: {point.y:.2f}"
+    },
+                series: []
+            };
+
+            // JQuery function to process the csv data
+		
+		 var url = "http://localhost:5000/static/{{ session['username'] }}/" ; 
+		//console.log(url);  
+            $.get(url+file, function(data) {
+                // Split the lines
+                var lines = data.split('\n');
+			var lines1 = data.split('\n');
+			var lines2 = data.split('\n');
+
+			var movalue =[];
+			//console.log(lines1);
+			//options.chart.renderTo = file;
+			
+			$.each(lines, function(lineNo, line) {
+                	 var items = line.split(',');
+                       
+                    // header line contains names of categories
+                    if (lineNo > 0) {
+					
+                      // $.each(items, function(itemNo, item) {
+                            //skip first item of first line
+					if(items[1]){
+						//New Code for Date
+						var date1 = new Date(items[1].substring(0,4),items[1].substring(4,6),items[1].substring(6,8),items[1].substring(8,10) - 7,items[1].substring(10,12),items[1].substring(12,14));
+						var yyyy = date1.getFullYear();
+						var mon = date1.getMonth();
+						var day = date1.getDate();
+						var hh = date1.getHours();
+						var mm = date1.getMinutes();
+						var ss = date1.getSeconds();
+						var newdate;
+						if (mm == 15){
+							newdate = yyyy+"-"+mon+"-"+day+" "+hh+":"+parseInt(mm-15);
+						}else if ( mm == 30){
+							newdate = yyyy+"-"+mon+"-"+day+" "+hh+":"+parseInt(mm-15);
+						}else if (mm == 45) {
+							newdate = yyyy+"-"+mon+"-"+day+" "+hh+":"+parseInt(mm-15);
+						}else{
+							newdate = yyyy+"-"+mon+"-"+day+" "+parseInt(hh-1)+":"+(60+(mm-15));
+						}
+						console.log(newdate);
+						//New Code Ends Here
+						var filedate = items[1].substring(0,4)+"-"+items[1].substring(4,6)+"-"+items[1].substring(6,8);
+
+						console.log(filedate);
+						//var upddate = new Date (filedate - 7*60*60*1000);
+						//console.log(upddate);
+						var x= items[1].substring(8,10) - 7;
+						
+						if(x <= -1)
+						{
+						var date = x + 24 +":"+items[1].substring(10,12);
+						}else{
+							var date = x +":"+items[1].substring(10,12);
+						}
+						
+                            	if($.inArray(newdate,options.xAxis.categories) == -1){
+					//		console.log(date);
+							//date = new Date(date);
+							if(lineNo== 1){
+								options.xAxis.title.text = "Date ";
+							}
+					 		options.xAxis.categories.push(newdate); //Replaces date with newdate
+							console.log(items[1]);
+							threshold = items[6]; //Set the parameter for which threshold need to set
+						
+						
+						}
+					}
+					
+				}
+			});
+			$.each(lines1, function(lineNo, line) {
+				var items = line.split(',');
+				if (items.length == 9){
+				var	mvalindex = 6;
+				var	parindex = 8;
+				}else {
+					mvalindex = 4;
+					parindex = 6;
+				}
+				if(lineNo>0){
+					if(items[mvalindex])
+					if($.inArray(items[mvalindex],movalue) == -1){
+						movalue.push(items[mvalindex]);
+					//	console.log(items[mvalindex]);
+					}
+				}
+                   
+			});
+			
+			//for(var i =0 ;i < options.xAxis.categories.length - 1;i++){
+				
+				for(var j=0; j < movalue.length; j++){ 
+					var series={ 
+					data: [],
+			               visible: false
+						
+					
+					};
+					$.each(lines2,function(lineNo,line){
+						var items=line.split(',');
+						if (items.length == 9){
+				var	mvalindex = 6;
+				var	parindex = 8;
+				}else {
+					mvalindex = 4;
+					parindex = 6;
+				}
+					//		console.log(items)
+						if(lineNo>0){
+							//console.log(items[6],movalue[j]);
+							
+							if(items[mvalindex] == movalue[j]){
+								series.data.push(parseFloat(items[mvalindex+1]));
+							}
+							if(items[parindex]){
+							                    if(options.title.text == ''){
+								                            options.title.text= items[parindex];
+							                               }
+						                       }
+						}
+
+					});
+					series.name=movalue[j];
+					if(movalue[j] === "PCS" || movalue[j] === "CLUSTER" || movalue[j]=== "AWS"){
+						series.visible=true;
+					}
+					options.series.push(series);
+					
+			
+				}
+			//}var chart = $('#container').highcharts();
+			
+			
+			//console.log(options.series);
+				
+			
+                //putting all together and create the chart
+                var chart = new Highcharts.Chart(options);
+				//Threshold line
+				if( threshold.match( 'AVG_UE_DL_THR')  || threshold.match( 'AVG_UE_UL_THR') || threshold.match( 'VOLTE_AFR') || threshold.match( 'VOLTE_DROP_RATE') ){
+							//	console.log("Inside IF Parameters "+threshold);
+					var maxrate;
+					if (threshold.match( 'AVG_UE_DL_THR') ) {
+							maxrate =2;
+					}else if (threshold.match( 'AVG_UE_UL_THR') ){
+							maxrate=500;
+					}else if(  threshold.match( 'VOLTE_AFR') ) {
+							maxrate = 1;
+					}else {
+							maxrate = 0.5;
+					}
+							
+								chart.yAxis[0].addPlotLine({
+								    value : maxrate,
+    								color : 'red',
+   								 dashStyle : 'shortdash',
+    								width : 2,
+    								label : {
+       									 text : ''
+    								}
+							});
+				}//Threshold Setting Ends here
+            
+			});         
+            }); 
+        });
+        </script>
+         
+    </head>
+    <body>
+         
+        <!-- 3. Add the container -->
+       <!-- <div id="container" style="width: 700px; height: 400px; margin: 0 auto"></div>-->
+		<p style="text-align:left;margin-top:10px;float:left;">
+		<a href="{{ url_for('home') }}" >Home</a>
+		<a href="{{ url_for('test2') }}" target="_blank">Summary Report</a>
+		</p>
+		{% for param in parameters %}
+			
+			<div id="{{ param }}"  style="width: 700px; height: 400px; margin: 0 auto"></div>
+		{% endfor %}	      
+                
+    </body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+    <title>CSV Parser</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js" type="text/javascript">
+    </script>
+    <style type="text/css">
+     body{
+
+         font-family:'Times New Roman';
+         }  
+    </style>
+</head>
+
+<body>
+    <script type="text/javascript">
+
+        jQuery(document).ready(function() {
+            $.ajax({
+                url: 'static/{{ session['username']}}/download.csv',
+            dataType: 'text',
+        }).done(successFunction);
+
+        function successFunction(data) {
+            var allRows = data.split(/\r?\n|\r/);
+            var table = '<table border="1" cellpadding="2" cellspacing="0" style="overflow-x:auto;" width="100%">';
+            for (var singleRow = 0; singleRow < allRows.length; singleRow++) {
+                if (singleRow === 0) {
+                    table += '<thead>';
+                    table += '<tr>';
+                } else {
+                    table += '<tr>';
+                }
+                var rowCells = allRows[singleRow].split(',');
+                for (var j = 0; j < rowCells.length; j++) {
+                    if (singleRow === 0) {
+                        table += '<th bgcolor = #82E0AA>';
+                        table += rowCells[j];
+                        table += '</th>';
+                        // $("th").css("color", "pink"); 
+                    } else {
+                        if ((rowCells[j - 1] == "VOLTE_CALLS" && rowCells[j] <= 3 || rowCells[j - 2] == "VOLTE_CALLS" && rowCells[j] <= 3) || (rowCells[j - 1] == "AVG_UE_DL_THR(Kbps)" && rowCells[j] >= 2000 || rowCells[j - 2] == "AVG_UE_DL_THR(Kbps)" && rowCells[j] >= 2000) || (rowCells[j - 1] == "AVG_UE_UL_THR(Kbps)" && rowCells[j] >= 500 || rowCells[j - 2] == "AVG_UE_UL_THR(Kbps)" && rowCells[j] >= 500)) {
+                            table += '<td bgcolor = green>';
+                            table += rowCells[j];
+                            table += '</td>';
+     
+                        } else if ((rowCells[j - 1] == "VOLTE_CALLS" && rowCells[j] > 3 || rowCells[j - 2] == "VOLTE_CALLS" && rowCells[j] > 3) || (rowCells[j - 1] == "AVG_UE_DL_THR(Kbps)" && rowCells[j] < 2000 || rowCells[j - 2] == "AVG_UE_DL_THR(Kbps)" && rowCells[j] < 2000) || (rowCells[j - 1] == "AVG_UE_UL_THR(Kbps)" && rowCells[j] < 500 || rowCells[j - 2] == "AVG_UE_UL_THR(Kbps)" && rowCells[j] < 500)) {
+                            table += '<td bgcolor = red>';
+                            table += rowCells[j];
+                            table += '</td>';
+                        } else {
+                            table += '<td bgcolor = #D0D3D4>';
+                            table += rowCells[j];
+                            table += '</td>';
+                        }
+                        
+                    }
+                }
+                if (singleRow === 0) {
+                    table += '</tr>';
+                    table += '</thead>';
+                    table += '<tbody>';
+                } else {
+                    table += '</tr>';
+                }
+            }
+            table += '</tbody>';
+            table += '</table>';
+            $('body').append(table);
+
+            
+        }
+});
+    </script>
+
+</body>
+
+</html>
+
+
+
